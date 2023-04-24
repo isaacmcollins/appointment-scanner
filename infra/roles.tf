@@ -1,11 +1,11 @@
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
- role        = aws_iam_role.lambda_role.name
- policy_arn  = aws_iam_policy.lambda_iam_policy.arn
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_iam_policy.arn
 }
 
 resource "aws_iam_role" "lambda_role" {
-name   = "appointment-scanner-lambda-role"
-assume_role_policy = <<EOF
+  name               = "appointment-scanner-lambda-role"
+  assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -23,11 +23,11 @@ EOF
 }
 
 resource "aws_iam_policy" "lambda_iam_policy" {
- 
- name         = "aws_iam_policy_for_terraform_aws_lambda_role"
- path         = "/"
- description  = "AWS IAM Policy for managing aws lambda role"
- policy = <<EOF
+
+  name        = "aws_iam_policy_for_terraform_aws_lambda_role"
+  path        = "/"
+  description = "AWS IAM Policy for managing aws lambda role"
+  policy      = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [

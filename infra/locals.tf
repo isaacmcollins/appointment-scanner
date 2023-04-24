@@ -1,5 +1,5 @@
 locals {
-    tags = {
-        app = "appointment-scanner"
-    }
+  tags = {
+    app = "appointment-scanner"
+  }
 }
