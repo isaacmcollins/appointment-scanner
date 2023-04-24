@@ -5,7 +5,7 @@ terraform {
       version = ">= 3.20.0"
     }
   }
-  backend {
+  backend "s3" {
     bucket = "collisaa"
     key = "appointment-scanner-tf-state/tfstate"
     region = "us-west-2"
