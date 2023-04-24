@@ -6,7 +6,7 @@ import (
 )
 
 func hello() (string, error) {
-	return "Hello λ! test", nil
+	return "Hello λ! test2", nil
 }
 
 func main() {
