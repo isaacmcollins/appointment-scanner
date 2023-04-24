@@ -30,7 +30,7 @@ jobs:
         go-version: 1.19
 
     - name: Build
-      run: go build -v main.go -o poller
+      run: go build -v -o poller main.go 
 
     - name: Zip Pkg
       run: zip -j deploy.zip poller
