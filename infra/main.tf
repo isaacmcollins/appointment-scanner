@@ -13,20 +13,30 @@
 resource "aws_lambda_function" "poller" {
     function_name = "poller"
     role = aws_iam_role.lambda_role.arn
+    filename = "../src/default.zip"
 
     tags = local.tags
     depends_on = [aws_iam_role_policy_attachment.lambda_policy_attachment]
+    lifecycle {
+        ignore_changes = [
+            filename,
+        ]
+    }
 }
 
 resource "aws_lambda_function" "notifier" {
     function_name = "notifier"
     role = aws_iam_role.lambda_role.arn
+    filename = "../src/default.zip"
 
     tags = local.tags
     depends_on = [aws_iam_role_policy_attachment.lambda_policy_attachment]
+    lifecycle {
+        ignore_changes = [
+            filename,
+        ]
+    }
 }
-
-
 
 # resource "aws_dynamodb_table" "state-store" {
 #     name = "state-store"
