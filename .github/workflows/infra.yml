@@ -1,7 +1,8 @@
 name: Provision Infra
 on: 
   push:
-    branches: [ main ]
+    paths:
+      - infra/**
 
 jobs:
   tf:
