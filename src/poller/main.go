@@ -2,14 +2,65 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func hello() (string, error) {
-	return "Hello λ! test2", nil
+type ApiResponse struct {
+	AvailableSlots []struct {
+		LocationID     int    `json:"locationId"`
+		StartTimestamp string `json:"startTimestamp"`
+		EndTimestamp   string `json:"endTimestamp"`
+		Active         bool   `json:"active"`
+		Duration       int    `json:"duration"`
+		RemoteInd      bool   `json:"remoteInd"`
+	} `json:"availableSlots"`
+	LastPublishedDate string `json:"lastPublishedDate"`
+}
+
+func get_avail_slots(locationId int) (*ApiResponse, error) {
+	api := fmt.Sprintf("https://ttp.cbp.dhs.gov/schedulerapi/slot-availability?locationId=%d", locationId)
+	var result ApiResponse
+	response, err := http.Get(api)
+	if err != nil {
+		fmt.Println("Could not get response from API")
+		return &result, err
+	}
+
+	defer response.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("Could not read response body")
+	}
+
+	if err := json.Unmarshal(responseBody, &result); err != nil {
+		fmt.Println("error unmarshalling JSON")
+		return &result, err
+	}
+
+	return &result, err
+}
+
+func handler() (string, error) {
+
+	appt, err := get_avail_slots(8120)
+	if err != nil {
+		fmt.Println("error")
+	}
+
+	resp, err := json.Marshal(appt)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(resp), nil
 }
 
 func main() {
-	// Make the handler available for Remote Procedure Call by AWS Lambda
-	lambda.Start(hello)
+	lambda.Start(handler)
 }
