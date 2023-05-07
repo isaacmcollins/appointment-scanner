@@ -74,27 +74,33 @@ resource "aws_iam_policy" "lambda_poller_policy" {
   path        = "/"
   description = "AWS IAM Policy for managing aws lambda role"
   policy      = <<EOF
+
 {
-	"Effect": "Allow",
-	"Action": [
-		"dynamodb:BatchGetItem",
-    "dynamodb:GetItem",
-		"dynamodb:Query",
-		"dynamodb:Scan",
-		"dynamodb:BatchWriteItem",
-		"dynamodb:PutItem",
-		"dynamodb:UpdateItem"
-	],
-	"Resource": "${aws_dynamodb_table.state-store.arn}"
-},
-{
-  "Action": [
-    "logs:CreateLogGroup",
-    "logs:CreateLogStream",
-    "logs:PutLogEvents"
-  ],
-  "Resource": "arn:aws:logs:*:*:*",
-  "Effect": "Allow"
+ "Version": "2012-10-17",
+ "Statement": [
+    {
+    	"Effect": "Allow",
+    	"Action": [
+    		"dynamodb:BatchGetItem",
+        "dynamodb:GetItem",
+    		"dynamodb:Query",
+    		"dynamodb:Scan",
+    		"dynamodb:BatchWriteItem",
+    		"dynamodb:PutItem",
+    		"dynamodb:UpdateItem"
+    	],
+    	"Resource": "${aws_dynamodb_table.state-store.arn}"
+    },
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
 }

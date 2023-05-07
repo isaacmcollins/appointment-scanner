@@ -53,7 +53,7 @@ resource "aws_dynamodb_table" "state-store" {
 
   attribute {
     name = "LocationId"
-    type = "S"
+    type = "N"
   }
 
   tags = local.tags
