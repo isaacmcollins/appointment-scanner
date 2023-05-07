@@ -56,10 +56,5 @@ resource "aws_dynamodb_table" "state-store" {
     type = "S"
   }
 
-  attribute {
-    name = "Availability"
-    type = "S"
-  }
-
   tags = local.tags
 }
