@@ -12,13 +12,13 @@
 
 resource "aws_lambda_function" "poller" {
   function_name = "poller"
-  role          = aws_iam_role.lambda_role.arn
+  role          = aws_iam_role.lambda_poller_role.arn
   filename      = "../src/default.zip"
   runtime       = "go1.x"
   handler       = "poller"
 
   tags       = local.tags
-  depends_on = [aws_iam_role_policy_attachment.lambda_policy_attachment]
+  depends_on = [aws_iam_role_policy_attachment.lambda_policy_poller_attachment]
 
   lifecycle {
     ignore_changes = [
