@@ -19,6 +19,7 @@ resource "aws_lambda_function" "poller" {
 
   tags       = local.tags
   depends_on = [aws_iam_role_policy_attachment.lambda_policy_attachment]
+
   lifecycle {
     ignore_changes = [
       filename,
@@ -35,6 +36,7 @@ resource "aws_lambda_function" "notifier" {
 
   tags       = local.tags
   depends_on = [aws_iam_role_policy_attachment.lambda_policy_attachment]
+
   lifecycle {
     ignore_changes = [
       filename,
@@ -42,8 +44,22 @@ resource "aws_lambda_function" "notifier" {
   }
 }
 
-# resource "aws_dynamodb_table" "state-store" {
-#     name = "state-store"
+resource "aws_dynamodb_table" "state-store" {
+  name           = "state-store"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "LocationId"
 
-#     tags = local.tags
-# }
+  attribute {
+    name = "LocationId"
+    type = "S"
+  }
+
+  attribute {
+    name = "Availability"
+    type = "S"
+  }
+
+  tags = local.tags
+}
