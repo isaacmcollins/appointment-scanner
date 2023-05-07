@@ -74,7 +74,6 @@ resource "aws_iam_policy" "lambda_poller_policy" {
   path        = "/"
   description = "AWS IAM Policy for managing aws lambda role"
   policy      = <<EOF
-
 {
  "Version": "2012-10-17",
  "Statement": [
