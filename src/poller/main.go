@@ -22,6 +22,11 @@ type ApiResponse struct {
 	LastPublishedDate string `json:"lastPublishedDate"`
 }
 
+type LocationState struct {
+	LocationId   int
+	Availability *ApiResponse
+}
+
 func get_avail_slots(locationId int) (*ApiResponse, error) {
 	api := fmt.Sprintf("https://ttp.cbp.dhs.gov/schedulerapi/slot-availability?locationId=%d", locationId)
 	var result ApiResponse
@@ -46,6 +51,10 @@ func get_avail_slots(locationId int) (*ApiResponse, error) {
 	return &result, err
 }
 
+func put_response(locationId int) (int, error) {
+	return 0, nil
+}
+
 func handler() (string, error) {
 
 	appt, err := get_avail_slots(8120)
@@ -53,7 +62,12 @@ func handler() (string, error) {
 		fmt.Println("error")
 	}
 
-	resp, err := json.Marshal(appt)
+	locationData := &LocationState{
+		LocationId:   8120,
+		Availability: appt,
+	}
+
+	resp, err := json.Marshal(locationData)
 	if err != nil {
 		panic(err)
 	}
