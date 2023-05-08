@@ -65,15 +65,16 @@ func update_state(locationId int, state *LocationState) error {
 
 	ddb := dynamodb.New(sess)
 
-	stateMap, marshalErr := dynamodbattribute.MarshalMap(state)
+	stateMap, marshalErr := dynamodbattribute.MarshalMap(&state)
 	if marshalErr != nil {
 		fmt.Println("Failed to marshal to dynamo map")
 		return marshalErr
 	}
 
+	table := "state-store"
 	input := &dynamodb.PutItemInput{
 		Item:      stateMap,
-		TableName: aws.String("state-store"),
+		TableName: aws.String(table),
 	}
 
 	_, writeErr := ddb.PutItem(input)
