@@ -9,7 +9,7 @@
 #     input = ""
 #   }
 # }
-#
+
 
 resource "aws_lambda_function" "poller" {
   function_name = "poller"
