@@ -86,7 +86,6 @@ func update_state(locationId int, state *LocationState) error {
 }
 
 func handler() (string, error) {
-
 	appt, err := get_avail_slots(8120)
 	if err != nil {
 		fmt.Println("Polling error")
