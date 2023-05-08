@@ -8,6 +8,10 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 type ApiResponse struct {
@@ -51,28 +55,53 @@ func get_avail_slots(locationId int) (*ApiResponse, error) {
 	return &result, err
 }
 
-func put_response(locationId int) (int, error) {
-	return 0, nil
+func update_state(locationId int, state *LocationState) error {
+
+	sess := session.Must(session.NewSessionWithOptions(
+		session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+		},
+	))
+
+	ddb := dynamodb.New(sess)
+
+	stateMap, marshalErr := dynamodbattribute.MarshalMap(state)
+	if marshalErr != nil {
+		fmt.Println("Failed to marshal to dynamo map")
+		return marshalErr
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      stateMap,
+		TableName: aws.String("state-store"),
+	}
+
+	_, writeErr := ddb.PutItem(input)
+	if writeErr != nil {
+		fmt.Println("Failed to write to DDB table")
+		return writeErr
+	}
+
+	return nil
 }
 
 func handler() (string, error) {
 
 	appt, err := get_avail_slots(8120)
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("Polling error")
 	}
-
-	locationData := &LocationState{
+	locationData := &LocationState{ //redundant
 		LocationId:   8120,
 		Availability: appt,
 	}
 
-	resp, err := json.Marshal(locationData)
+	err = update_state(8120, locationData)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error writing to dynamodb")
 	}
 
-	return string(resp), nil
+	return "OK", nil
 }
 
 func main() {
