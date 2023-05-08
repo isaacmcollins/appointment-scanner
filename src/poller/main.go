@@ -99,6 +99,7 @@ func handler() (string, error) {
 	err = update_state(8120, locationData)
 	if err != nil {
 		fmt.Println("Error writing to dynamodb")
+		fmt.Println(err)
 	}
 
 	return "OK", nil
