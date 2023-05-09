@@ -1,15 +1,13 @@
-# resource "aws_scheduler_schedule" "cron" {
-#   name       = "cron"
-#   schedule_expression = "rate(10 minutes)"
+resource "aws_scheduler_schedule" "poller-cron" {
+  name       = "poller-cron"
+  schedule_expression = "rate(10 minutes)"
 
-#   target {
-#     arn      = "arn:aws:scheduler:::aws-sdk:sqs:sendMessage"
-#     role_arn = aws_iam_role.example.arn
-
-#     input = ""
-#   }
-# }
-
+  target {
+    arn      = aws_lambda_function.poller.arn
+    role_arn = aws_iam_role.scheduler_role.arn
+  }
+  tags = local.tags
+}
 
 resource "aws_lambda_function" "poller" {
   function_name = "poller"

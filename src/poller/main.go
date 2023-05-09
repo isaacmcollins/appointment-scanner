@@ -87,16 +87,16 @@ func update_state(locationId int, state *LocationState) error {
 }
 
 func handler() (string, error) {
-	appt, err := get_avail_slots(8120)
+	appt, err := get_avail_slots(2907)
 	if err != nil {
 		fmt.Println("Polling error")
 	}
 	locationData := &LocationState{ //redundant
-		LocationId:   8120,
+		LocationId:   2907,
 		Availability: appt,
 	}
 
-	err = update_state(8120, locationData)
+	err = update_state(2907, locationData)
 	if err != nil {
 		fmt.Println("Error writing to dynamodb")
 		fmt.Println(err)
