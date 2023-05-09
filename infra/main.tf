@@ -6,7 +6,10 @@ resource "aws_scheduler_schedule" "poller-cron" {
     arn      = aws_lambda_function.poller.arn
     role_arn = aws_iam_role.scheduler_role.arn
   }
-  tags = local.tags
+  
+  flexible_time_window {
+    mode = "OFF"
+  }
 }
 
 resource "aws_lambda_function" "poller" {
