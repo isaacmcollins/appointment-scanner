@@ -1,12 +1,12 @@
 resource "aws_scheduler_schedule" "poller-cron" {
-  name       = "poller-cron"
+  name                = "poller-cron"
   schedule_expression = "rate(10 minutes)"
 
   target {
     arn      = aws_lambda_function.poller.arn
     role_arn = aws_iam_role.scheduler_role.arn
   }
-  
+
   flexible_time_window {
     mode = "OFF"
   }
@@ -52,10 +52,15 @@ resource "aws_dynamodb_table" "state-store" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "LocationId"
+  range_key      = "PollLocation"
 
   attribute {
     name = "LocationId"
     type = "N"
+  }
+  attribute {
+    name = "PollLocation"
+    type = "BOOL"
   }
 
   tags = local.tags

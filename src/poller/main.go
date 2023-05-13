@@ -3,11 +3,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -30,6 +32,8 @@ type LocationState struct {
 	LocationId   int
 	Availability *ApiResponse
 }
+
+const tableName string = "state-store"
 
 func get_avail_slots(locationId int) (*ApiResponse, error) {
 	api := fmt.Sprintf("https://ttp.cbp.dhs.gov/schedulerapi/slot-availability?locationId=%d", locationId)
@@ -56,14 +60,7 @@ func get_avail_slots(locationId int) (*ApiResponse, error) {
 }
 
 func update_state(locationId int, state *LocationState) error {
-
-	sess := session.Must(session.NewSessionWithOptions(
-		session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-		},
-	))
-
-	ddb := dynamodb.New(sess)
+	ddb := createDynamoSession()
 
 	stateMap, marshalErr := dynamodbattribute.MarshalMap(&state)
 	if marshalErr != nil {
@@ -71,10 +68,9 @@ func update_state(locationId int, state *LocationState) error {
 		return marshalErr
 	}
 
-	table := "state-store"
 	input := &dynamodb.PutItemInput{
 		Item:      stateMap,
-		TableName: aws.String(table),
+		TableName: aws.String(tableName),
 	}
 
 	_, writeErr := ddb.PutItem(input)
@@ -86,17 +82,59 @@ func update_state(locationId int, state *LocationState) error {
 	return nil
 }
 
+func getState(locationId int) (*LocationState, error) {
+	session := createDynamoSession()
+
+	result, err := session.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]types.AttributeValue{
+			"locationId": &types.AttributeValueMemberS{Value: locationId},
+		},
+	})
+	if err != nil {
+		fmt.Println("Error getting location")
+		return err
+	}
+	if result.Item == nil {
+		msg := "Could not get location '" + string(locationId) + "'"
+		return nil, errors.New(msg)
+	}
+
+	location := LocationState{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, &location)
+	if err != nil {
+		msg := "Could not unmarshall for location '" + string(locationId) + "'"
+		return nil, errors.New(msg)
+	}
+
+	return &location, nil
+}
+
+func createDynamoSession() *dynamodb.DynamoDB {
+	sesh := session.Must(session.NewSessionWithOptions(
+		session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+		},
+	))
+
+	return dynamodb.New(sesh)
+}
+
+func get_locations() {
+	return
+}
+
 func handler() (string, error) {
-	appt, err := get_avail_slots(2907)
+	appt, err := get_avail_slots(12161)
 	if err != nil {
 		fmt.Println("Polling error")
 	}
 	locationData := &LocationState{ //redundant
-		LocationId:   2907,
+		LocationId:   12161,
 		Availability: appt,
 	}
 
-	err = update_state(2907, locationData)
+	err = update_state(12161, locationData)
 	if err != nil {
 		fmt.Println("Error writing to dynamodb")
 		fmt.Println(err)

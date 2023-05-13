@@ -29,7 +29,7 @@ resource "aws_iam_role" "scheduler_role" {
     ]
 }
 EOF
-  tags = local.tags
+  tags               = local.tags
 }
 
 resource "aws_iam_role" "lambda_role" {
@@ -49,7 +49,7 @@ resource "aws_iam_role" "lambda_role" {
  ]
 }
 EOF
-  tags = local.tags
+  tags               = local.tags
 }
 
 resource "aws_iam_role" "lambda_poller_role" {
@@ -69,7 +69,7 @@ resource "aws_iam_role" "lambda_poller_role" {
  ]
 }
 EOF
- tags = local.tags
+  tags               = local.tags
 }
 
 
@@ -94,7 +94,7 @@ resource "aws_iam_policy" "lambda_iam_policy" {
  ]
 }
 EOF
-  tags = local.tags
+  tags        = local.tags
 }
 
 resource "aws_iam_policy" "scheduler_iam_trigger_policy" {
@@ -154,6 +154,6 @@ resource "aws_iam_policy" "lambda_poller_policy" {
   ]
 }
 EOF
-  tags = local.tags
+  tags        = local.tags
 }
 
