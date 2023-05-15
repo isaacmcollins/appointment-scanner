@@ -52,16 +52,11 @@ resource "aws_dynamodb_table" "state-store" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "LocationId"
-  range_key      = "PollLocation"
 
   attribute {
     name = "LocationId"
     type = "N"
   }
-  attribute {
-    name = "PollLocation"
-    type = "BOOL"
-  }
-
+  
   tags = local.tags
 }
