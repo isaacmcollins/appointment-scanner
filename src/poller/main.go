@@ -173,7 +173,7 @@ func handler() (string, error) {
 		fmt.Println(err)
 		return "FAIL", err
 	}
-	fmt.Println(boise.)
+	fmt.Println(boise.CurrentState.NextAppointmentDate)
 	err = boise.storeCurrentState()
 	if err != nil {
 		fmt.Println("Could not write state to DDB for loc %d", boise.LocationId)
