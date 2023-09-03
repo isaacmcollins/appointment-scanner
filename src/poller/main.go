@@ -113,7 +113,7 @@ func (s *Location) getLocationPreviousState() error {
 	session := createDynamoSession()
 	result, err := session.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
-		Key: map[string]types.AttributeValue{
+		Key: map[string]*types.AttributeValue{
 			"locationId": &types.AttributeValueMemberS{Value: string(s.LocationId)},
 		},
 	})
