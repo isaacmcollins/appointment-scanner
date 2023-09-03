@@ -92,10 +92,10 @@ func (s Location) storeCurrentState() error {
 	stateMap, marshalErr := attributevalue.MarshalMap(
 		&struct {
 			LocationId int
-			state      LocationState
+			State      LocationState
 		}{
 			LocationId: s.LocationId,
-			state:      *s.CurrentState,
+			State:      *s.CurrentState,
 		},
 	)
 	if marshalErr != nil {
@@ -173,6 +173,7 @@ func handler() (string, error) {
 		fmt.Println(err)
 		return "FAIL", err
 	}
+	fmt.Println(boise.)
 	err = boise.storeCurrentState()
 	if err != nil {
 		fmt.Println("Could not write state to DDB for loc %d", boise.LocationId)
