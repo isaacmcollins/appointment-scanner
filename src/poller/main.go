@@ -124,7 +124,7 @@ func (s *Location) getPreviousState() error {
 	result, err := session.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
-			"LocationId": &types.AttributeValueMemberN{Value: s.LocationId},
+			"LocationId": &types.AttributeValueMemberN{Value: string(s.LocationId)},
 		},
 	})
 	if err != nil {
