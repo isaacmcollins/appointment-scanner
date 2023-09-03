@@ -91,10 +91,10 @@ func (s Location) storeCurrentState() error {
 	ddb := createDynamoSession()
 	stateMap, marshalErr := attributevalue.MarshalMap(
 		&struct {
-			locationId int
+			LocationId int
 			state      LocationState
 		}{
-			locationId: s.LocationId,
+			LocationId: s.LocationId,
 			state:      *s.CurrentState,
 		},
 	)
