@@ -68,7 +68,7 @@ func (s *Location) getCurrentState() error {
 	}
 
 	data := ApiResponse{}
-	if err := json.Unmarshal(responseBody, data); err != nil {
+	if err := json.Unmarshal(responseBody, &data); err != nil {
 		fmt.Println("error unmarshalling JSON")
 		fmt.Println(err)
 	}
