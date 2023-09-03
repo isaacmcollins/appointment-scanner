@@ -136,7 +136,7 @@ func (s *Location) getPreviousState() error {
 		msg := "Could not get prev state for location '" + strconv.Itoa(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = attributevalue.Unmarshal(result.Item["State"], s.PreviousState)
+	err = attributevalue.Unmarshal(result.Item["State"], &s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + strconv.Itoa(s.LocationId) + "'"
 		return errors.New(msg)
