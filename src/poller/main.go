@@ -70,6 +70,7 @@ func (s *Location) getCurrentState() error {
 	data := ApiResponse{}
 	if err := json.Unmarshal(responseBody, data); err != nil {
 		fmt.Println("error unmarshalling JSON")
+		fmt.Println(err)
 	}
 
 	timestamp, err := time.Parse("2006-01-02T15:05", data.AvailableSlots[0].StartTimestamp)
