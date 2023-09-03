@@ -144,9 +144,12 @@ func (s *Location) getPreviousState() error {
 	return nil
 }
 
-func (s Location) compare() error {
-
-	return nil
+func (s Location) isNewAppointmentDate() bool {
+	if s.CurrentState.NextAppointmentDate.Before(
+		s.PreviousState.NextAppointmentDate) {
+		return true
+	}
+	return false
 }
 
 func createDynamoSession() *dynamodb.Client {
@@ -173,14 +176,22 @@ func handler() (string, error) {
 		fmt.Println(err)
 		return "FAIL", err
 	}
-	fmt.Println(boise.CurrentState.NextAppointmentDate)
 	err = boise.storeCurrentState()
 	if err != nil {
 		fmt.Println("Could not write state to DDB for loc %d", boise.LocationId)
 		fmt.Println(err)
 		return "FAIL", err
 	}
+	err = boise.getPreviousState()
+	if err != nil {
+		fmt.Println("Could retreive previous state from DDB for loc %d", boise.LocationId)
+		fmt.Println(err)
+		return "FAIL", err
+	}
 
+	if boise.isNewAppointmentDate() {
+		return fmt.Sprintf("NEW SLOT %s", boise.CurrentState.NextAppointmentDate), nil
+	}
 	return "Run OK", nil
 }
 
