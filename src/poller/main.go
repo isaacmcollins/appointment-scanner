@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -29,27 +30,33 @@ type ApiResponse struct {
 }
 
 type LocationState struct {
-	LocationId   int
-	Availability *ApiResponse
+	NextAppointmentDate time.Time
+	Active              bool
+}
+
+type Location struct {
+	LocationId    int
+	PreviousState *LocationState
+	CurrentState  *LocationState
 }
 
 const tableName string = "state-store"
 const baseUrl string = "https://ttp.cbp.dhs.gov/schedulerapi"
 
-func newLocation(locationId int) *LocationState {
-	locationState := LocationState{
-		LocationId:   locationId,
-		Availability: nil,
+func newLocation(locationId int) *Location {
+	locationState := Location{
+		LocationId:    locationId,
+		PreviousState: nil,
+		CurrentState:  nil,
 	}
 	return &locationState
 }
 
-func (s *LocationState) getCurrentSlots() error {
+func (s *Location) getLocationCurrentState() error {
 	api := fmt.Sprintf("%s/slot-availability?locationId=%d", baseUrl, s.LocationId)
 	response, err := http.Get(api)
 	if err != nil {
 		fmt.Println("Could not get response from API")
-		return err
 	}
 
 	defer response.Body.Close()
@@ -59,18 +66,30 @@ func (s *LocationState) getCurrentSlots() error {
 		fmt.Println("Could not read response body")
 	}
 
-	if err := json.Unmarshal(responseBody, s.Availability); err != nil {
+	data := ApiResponse{}
+	if err := json.Unmarshal(responseBody, data); err != nil {
 		fmt.Println("error unmarshalling JSON")
+	}
+
+	timestamp, err := time.Parse("2006-01-02T15:05", data.AvailableSlots[0].StartTimestamp)
+	if err != nil {
+		fmt.Println("Could not pars timestamp %s", data.AvailableSlots[0].StartTimestamp)
 		return err
 	}
 
+	s.CurrentState = &LocationState{
+		NextAppointmentDate: timestamp,
+		Active:              data.AvailableSlots[0].Active,
+	}
 	return err
 }
 
-func (s LocationState) storeState() error {
+func (s Location) storeLocationCurrentState() error {
 	ddb := createDynamoSession()
-
-	stateMap, marshalErr := dynamodbattribute.MarshalMap(s)
+	currentLocationStateMap := map[int]LocationState{
+		s.LocationId: *s.CurrentState,
+	}
+	stateMap, marshalErr := dynamodbattribute.MarshalMap(currentLocationStateMap)
 	if marshalErr != nil {
 		fmt.Println("Failed to marshal to dynamo map")
 		return marshalErr
@@ -90,7 +109,7 @@ func (s LocationState) storeState() error {
 	return nil
 }
 
-func (s *LocationState) getLastState() error {
+func (s *Location) getLocationPreviousState() error {
 	session := createDynamoSession()
 	result, err := session.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -100,17 +119,22 @@ func (s *LocationState) getLastState() error {
 	})
 	if err != nil {
 		fmt.Println("Error getting location")
-		return nil, err
+		return err
 	}
 	if result.Item == nil {
 		msg := "Could not get location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = dynamodbattribute.UnmarshalMap(result.Item, s.Availability)
+	err = dynamodbattribute.UnmarshalMap(result.Item, s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
+
+	return nil
+}
+
+func (s Location) compare() error {
 
 	return nil
 }
@@ -132,13 +156,14 @@ func get_locations() {
 
 func handler() (string, error) {
 	boise := newLocation(12161)
-	err := boise.getCurrentSlots()
+	err := boise.getLocationCurrentState()
+	fmt.Println(boise.CurrentState.NextAppointmentDate)
 	if err != nil {
 		fmt.Println("Could not read avail slots for location %d", boise.LocationId)
 		fmt.Println(err)
 		return "FAIL", err
 	}
-	err = boise.storeState()
+	err = boise.storeLocationCurrentState()
 	if err != nil {
 		fmt.Println("Could not write state to DDB for loc %d", boise.LocationId)
 		fmt.Println(err)
