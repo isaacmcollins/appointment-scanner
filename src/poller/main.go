@@ -133,7 +133,7 @@ func (s *Location) getPreviousState() error {
 		msg := "Could not get prev state for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = attributevalue.UnmarshalMap(result.Item["state"], s.PreviousState)
+	err = attributevalue.Unmarshal(result.Item["state"], s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
