@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -144,8 +145,9 @@ func (s Location) compare() error {
 	return nil
 }
 
-func createDynamoSession() *dynamodb.DynamoDB {
-	cfg, err := config.LoadDefaultConfig()
+func createDynamoSession() *dynamodb.Client {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		panic(err)
 	}
