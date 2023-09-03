@@ -86,6 +86,7 @@ func (s *Location) getCurrentState() error {
 }
 
 func (s Location) storeCurrentState() error {
+	ctx := context.Background()
 	ddb := createDynamoSession()
 	stateMap, marshalErr := attributevalue.MarshalMap(
 		&struct {
@@ -106,7 +107,7 @@ func (s Location) storeCurrentState() error {
 		TableName: aws.String(tableName),
 	}
 
-	_, writeErr := ddb.PutItem(input)
+	_, writeErr := ddb.PutItem(ctx, input)
 	if writeErr != nil {
 		fmt.Println("Failed to write to DDB table")
 		return writeErr
@@ -116,8 +117,9 @@ func (s Location) storeCurrentState() error {
 }
 
 func (s *Location) getPreviousState() error {
+	ctx := context.Background()
 	session := createDynamoSession()
-	result, err := session.GetItem(&dynamodb.GetItemInput{
+	result, err := session.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
 			"LocationId": &types.AttributeValueMemberS{Value: string(s.LocationId)},
@@ -131,7 +133,7 @@ func (s *Location) getPreviousState() error {
 		msg := "Could not get prev state for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = attributevalue.UnmarshalMap(result.Item.state, s.PreviousState)
+	err = attributevalue.UnmarshalMap(result.Item["state"], s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
