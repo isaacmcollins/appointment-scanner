@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -145,13 +145,12 @@ func (s Location) compare() error {
 }
 
 func createDynamoSession() *dynamodb.DynamoDB {
-	sesh := session.Must(session.NewSessionWithOptions(
-		session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-		},
-	))
+	cfg, err := config.LoadDefaultConfig()
+	if err != nil {
+		panic(err)
+	}
 
-	return dynamodb.New(sesh)
+	return dynamodb.NewFromConfig(cfg)
 }
 
 func get_locations() {
