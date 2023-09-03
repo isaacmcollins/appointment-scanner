@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 type ApiResponse struct {
@@ -52,7 +52,7 @@ func newLocation(locationId int) *Location {
 	return &locationState
 }
 
-func (s *Location) getLocationCurrentState() error {
+func (s *Location) getCurrentState() error {
 	api := fmt.Sprintf("%s/slot-availability?locationId=%d", baseUrl, s.LocationId)
 	response, err := http.Get(api)
 	if err != nil {
@@ -84,12 +84,17 @@ func (s *Location) getLocationCurrentState() error {
 	return err
 }
 
-func (s Location) storeLocationCurrentState() error {
+func (s Location) storeCurrentState() error {
 	ddb := createDynamoSession()
-	currentLocationStateMap := map[int]LocationState{
-		s.LocationId: *s.CurrentState,
-	}
-	stateMap, marshalErr := dynamodbattribute.MarshalMap(currentLocationStateMap)
+	stateMap, marshalErr := dynamodbattribute.MarshalMap(
+		&struct {
+			locationId int
+			state      LocationState
+		}{
+			locationId: s.LocationId,
+			state:      *s.CurrentState,
+		},
+	)
 	if marshalErr != nil {
 		fmt.Println("Failed to marshal to dynamo map")
 		return marshalErr
@@ -109,11 +114,11 @@ func (s Location) storeLocationCurrentState() error {
 	return nil
 }
 
-func (s *Location) getLocationPreviousState() error {
+func (s *Location) getPreviousState() error {
 	session := createDynamoSession()
 	result, err := session.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
-		Key: map[string]*types.AttributeValue{
+		Key: map[string]types.AttributeValue{
 			"locationId": &types.AttributeValueMemberS{Value: string(s.LocationId)},
 		},
 	})
@@ -122,10 +127,10 @@ func (s *Location) getLocationPreviousState() error {
 		return err
 	}
 	if result.Item == nil {
-		msg := "Could not get location '" + string(s.LocationId) + "'"
+		msg := "Could not get prev state for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = dynamodbattribute.UnmarshalMap(result.Item, s.PreviousState)
+	err = dynamodbattribute.UnmarshalMap(result.Item.state, s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
@@ -156,14 +161,14 @@ func get_locations() {
 
 func handler() (string, error) {
 	boise := newLocation(12161)
-	err := boise.getLocationCurrentState()
+	err := boise.getCurrentState()
 	fmt.Println(boise.CurrentState.NextAppointmentDate)
 	if err != nil {
 		fmt.Println("Could not read avail slots for location %d", boise.LocationId)
 		fmt.Println(err)
 		return "FAIL", err
 	}
-	err = boise.storeLocationCurrentState()
+	err = boise.storeCurrentState()
 	if err != nil {
 		fmt.Println("Could not write state to DDB for loc %d", boise.LocationId)
 		fmt.Println(err)
