@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -124,7 +125,7 @@ func (s *Location) getPreviousState() error {
 	result, err := session.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
-			"LocationId": &types.AttributeValueMemberN{Value: string(s.LocationId)},
+			"LocationId": &types.AttributeValueMemberN{Value: strconv.Itoa(s.LocationId)},
 		},
 	})
 	if err != nil {
@@ -132,12 +133,12 @@ func (s *Location) getPreviousState() error {
 		return err
 	}
 	if result.Item == nil {
-		msg := "Could not get prev state for location '" + string(s.LocationId) + "'"
+		msg := "Could not get prev state for location '" + strconv.Itoa(s.LocationId) + "'"
 		return errors.New(msg)
 	}
 	err = attributevalue.Unmarshal(result.Item["State"], s.PreviousState)
 	if err != nil {
-		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
+		msg := "Could not unmarshall for location '" + strconv.Itoa(s.LocationId) + "'"
 		return errors.New(msg)
 	}
 
