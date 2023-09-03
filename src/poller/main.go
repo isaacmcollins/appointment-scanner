@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 type ApiResponse struct {
@@ -86,7 +86,7 @@ func (s *Location) getCurrentState() error {
 
 func (s Location) storeCurrentState() error {
 	ddb := createDynamoSession()
-	stateMap, marshalErr := dynamodbattribute.MarshalMap(
+	stateMap, marshalErr := attributevalue.MarshalMap(
 		&struct {
 			locationId int
 			state      LocationState
@@ -119,7 +119,7 @@ func (s *Location) getPreviousState() error {
 	result, err := session.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
-			"locationId": &types.AttributeValueMemberS{Value: string(s.LocationId)},
+			"LocationId": &types.AttributeValueMemberS{Value: string(s.LocationId)},
 		},
 	})
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *Location) getPreviousState() error {
 		msg := "Could not get prev state for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
 	}
-	err = dynamodbattribute.UnmarshalMap(result.Item.state, s.PreviousState)
+	err = attributevalue.UnmarshalMap(result.Item.state, s.PreviousState)
 	if err != nil {
 		msg := "Could not unmarshall for location '" + string(s.LocationId) + "'"
 		return errors.New(msg)
