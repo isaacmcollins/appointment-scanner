@@ -108,11 +108,12 @@ func (s Location) storeCurrentState() error {
 		TableName: aws.String(tableName),
 	}
 
-	_, writeErr := ddb.PutItem(ctx, input)
+	out, writeErr := ddb.PutItem(ctx, input)
 	if writeErr != nil {
 		fmt.Println("Failed to write to DDB table")
 		return writeErr
 	}
+	fmt.Println(out)
 
 	return nil
 }
