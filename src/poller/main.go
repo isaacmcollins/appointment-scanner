@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 type ApiResponse struct {
@@ -41,6 +44,8 @@ type Location struct {
 	PreviousState *LocationState
 	CurrentState  *LocationState
 }
+
+var logger zerolog.Logger
 
 const tableName string = "state-store"
 const baseUrl string = "https://ttp.cbp.dhs.gov/schedulerapi"
@@ -171,10 +176,9 @@ func get_locations() {
 func handler() (string, error) {
 	boise := newLocation(12161)
 	err := boise.getCurrentState()
-	fmt.Println(boise.CurrentState.NextAppointmentDate)
 	if err != nil {
-		fmt.Println("Could not read avail slots for location %d", boise.LocationId)
-		fmt.Println(err)
+		log.Println("{ :", boise.LocationId)
+		log.Println(err)
 		return "FAIL", err
 	}
 	err = boise.storeCurrentState()
@@ -191,11 +195,17 @@ func handler() (string, error) {
 	}
 
 	if boise.isNewAppointmentDate() {
-		return fmt.Sprintf("NEW SLOT %s", boise.CurrentState.NextAppointmentDate), nil
+		res := fmt.Sprintf("NEW SLOT %s", boise.CurrentState.NextAppointmentDate)
+		logger.Info().Msg(res)
+		return res, nil
 	}
-	return "Run OK", nil
+
+	return "OK", nil
 }
 
 func main() {
+	logger = zlog.With().
+		Str("function", "poller").
+		Logger()
 	lambda.Start(handler)
 }
